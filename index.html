@@ -24,6 +24,91 @@
     --radius-sm: 8px;
   }
 
+  /* ── Password Screen ── */
+  .pw-screen {
+    position: fixed;
+    inset: 0;
+    z-index: 99999;
+    background: var(--bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    font-family: 'Outfit', 'Noto Sans KR', sans-serif;
+  }
+  .pw-screen.hidden { display: none; }
+  .pw-box {
+    text-align: center;
+    max-width: 360px;
+    width: 100%;
+    padding: 0 24px;
+  }
+  .pw-logo {
+    width: 48px; height: 48px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--accent-ulta), var(--accent-global));
+    display: grid;
+    place-items: center;
+    font-weight: 700;
+    font-size: 20px;
+    color: #fff;
+    margin: 0 auto 20px;
+  }
+  .pw-title {
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 6px;
+    letter-spacing: -0.3px;
+  }
+  .pw-sub {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 28px;
+  }
+  .pw-input {
+    width: 100%;
+    padding: 12px 16px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text-primary);
+    font-family: inherit;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s;
+    text-align: center;
+    letter-spacing: 2px;
+  }
+  .pw-input:focus { border-color: var(--border-active); }
+  .pw-input.error { border-color: var(--accent-ulta); animation: shake 0.4s ease; }
+  .pw-btn {
+    width: 100%;
+    margin-top: 12px;
+    padding: 12px;
+    border-radius: var(--radius-sm);
+    border: none;
+    background: linear-gradient(135deg, var(--accent-ulta), var(--accent-global));
+    color: #fff;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+  .pw-btn:hover { opacity: 0.9; }
+  .pw-error-msg {
+    margin-top: 12px;
+    font-size: 12px;
+    color: var(--accent-ulta);
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .pw-error-msg.show { opacity: 1; }
+  @keyframes shake {
+    0%,100%{transform:translateX(0)} 25%{transform:translateX(-6px)} 75%{transform:translateX(6px)}
+  }
+
   html { font-size: 16px; }
 
   body {
@@ -328,6 +413,18 @@
 
 <div class="ambient"></div>
 
+<!-- Password Screen -->
+<div class="pw-screen" id="pwScreen">
+  <div class="pw-box">
+    <div class="pw-logo">L</div>
+    <div class="pw-title">Leferi OS</div>
+    <div class="pw-sub">Design Review — Enter password to continue</div>
+    <input type="password" class="pw-input" id="pwInput" placeholder="Password" autofocus>
+    <button class="pw-btn" id="pwBtn" onclick="checkPw()">Enter</button>
+    <div class="pw-error-msg" id="pwError">Incorrect password</div>
+  </div>
+</div>
+
 <div class="app">
 
   <!-- Header -->
@@ -470,6 +567,26 @@
         btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 00-2 2v3m18 0V5a2 2 0 00-2-2h-3m0 18h3a2 2 0 002-2v-3M3 16v3a2 2 0 002 2h3"/></svg> 풀스크린`;
       });
     }
+  });
+  // Password protection
+  const PW = 'leferist';
+  const app = document.querySelector('.app');
+  app.style.display = 'none';
+
+  function checkPw() {
+    const input = document.getElementById('pwInput');
+    const error = document.getElementById('pwError');
+    if (input.value === PW) {
+      document.getElementById('pwScreen').classList.add('hidden');
+      app.style.display = 'flex';
+    } else {
+      input.classList.add('error');
+      error.classList.add('show');
+      setTimeout(() => { input.classList.remove('error'); }, 400);
+    }
+  }
+  document.getElementById('pwInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') checkPw();
   });
 </script>
 
