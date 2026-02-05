@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Leferi OS — Design Review</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #0B0B0F;
+    --surface: #141419;
+    --surface-hover: #1C1C24;
+    --border: rgba(255,255,255,0.06);
+    --border-active: rgba(255,255,255,0.15);
+    --text-primary: #F0EEF2;
+    --text-secondary: #8A8694;
+    --text-muted: #5A5766;
+    --accent-ulta: #E8457C;
+    --accent-korea: #9FE870;
+    --accent-global: #70B8FF;
+    --radius: 14px;
+    --radius-sm: 8px;
+  }
+
+  html { font-size: 16px; }
+
+  body {
+    font-family: 'Outfit', 'Noto Sans KR', sans-serif;
+    background: var(--bg);
+    color: var(--text-primary);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── Ambient Background ── */
+  .ambient {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    overflow: hidden;
+  }
+  .ambient::before {
+    content: '';
+    position: absolute;
+    width: 600px; height: 600px;
+    top: -200px; left: -100px;
+    background: radial-gradient(circle, rgba(232,69,124,0.08) 0%, transparent 70%);
+    filter: blur(80px);
+    animation: drift1 20s ease-in-out infinite;
+  }
+  .ambient::after {
+    content: '';
+    position: absolute;
+    width: 500px; height: 500px;
+    bottom: -150px; right: -100px;
+    background: radial-gradient(circle, rgba(112,184,255,0.07) 0%, transparent 70%);
+    filter: blur(80px);
+    animation: drift2 25s ease-in-out infinite;
+  }
+  @keyframes drift1 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(80px,60px)} }
+  @keyframes drift2 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(-60px,-40px)} }
+
+  /* ── Layout ── */
+  .app {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+
+  /* ── Header ── */
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 36px;
+    border-bottom: 1px solid var(--border);
+    backdrop-filter: blur(20px);
+    background: rgba(11,11,15,0.7);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .logo-mark {
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, var(--accent-ulta), var(--accent-global));
+    display: grid;
+    place-items: center;
+    font-weight: 700;
+    font-size: 14px;
+    color: #fff;
+    letter-spacing: -0.5px;
+  }
+  .logo-text {
+    font-weight: 600;
+    font-size: 17px;
+    letter-spacing: -0.3px;
+  }
+  .logo-text span {
+    color: var(--text-muted);
+    font-weight: 400;
+    margin-left: 8px;
+    font-size: 13px;
+  }
+  .header-meta {
+    font-size: 12px;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .status-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--accent-korea);
+    display: inline-block;
+    margin-right: 6px;
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+  /* ── Tab Navigation ── */
+  .tab-nav {
+    display: flex;
+    gap: 4px;
+    padding: 16px 36px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .tab-btn {
+    position: relative;
+    padding: 12px 22px 16px;
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: color 0.3s;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  }
+  .tab-btn:hover { color: var(--text-secondary); background: rgba(255,255,255,0.02); }
+  .tab-btn.active { color: var(--text-primary); }
+  .tab-btn::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 0; right: 0;
+    height: 2px;
+    border-radius: 2px 2px 0 0;
+    transform: scaleX(0);
+    transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .tab-btn.active::after { transform: scaleX(1); }
+
+  .tab-btn[data-tab="ulta"] .tab-dot { background: var(--accent-ulta); }
+  .tab-btn[data-tab="ulta"].active::after { background: var(--accent-ulta); }
+  .tab-btn[data-tab="ulta"].active { color: var(--accent-ulta); }
+
+  .tab-btn[data-tab="korea"] .tab-dot { background: var(--accent-korea); }
+  .tab-btn[data-tab="korea"].active::after { background: var(--accent-korea); }
+  .tab-btn[data-tab="korea"].active { color: var(--accent-korea); }
+
+  .tab-btn[data-tab="global"] .tab-dot { background: var(--accent-global); }
+  .tab-btn[data-tab="global"].active::after { background: var(--accent-global); }
+  .tab-btn[data-tab="global"].active { color: var(--accent-global); }
+
+  .tab-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    opacity: 0.5;
+    transition: opacity 0.3s;
+  }
+  .tab-btn.active .tab-dot { opacity: 1; }
+
+  .tab-label-en {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-weight: 400;
+    margin-left: 2px;
+  }
+  .tab-btn.active .tab-label-en { opacity: 0.6; }
+
+  /* ── Main Content / Figma Embed ── */
+  .content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 24px 36px 36px;
+  }
+
+  .embed-container {
+    flex: 1;
+    display: none;
+    flex-direction: column;
+    animation: fadeIn 0.4s ease;
+  }
+  .embed-container.active { display: flex; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .embed-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+  .embed-title {
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: -0.5px;
+  }
+  .embed-subtitle {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-top: 4px;
+  }
+  .embed-actions {
+    display: flex;
+    gap: 8px;
+  }
+  .btn-action {
+    padding: 8px 16px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text-secondary);
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .btn-action:hover {
+    background: var(--surface-hover);
+    border-color: var(--border-active);
+    color: var(--text-primary);
+  }
+  .btn-action svg { width: 14px; height: 14px; }
+
+  .embed-frame-wrapper {
+    flex: 1;
+    min-height: 0;
+    border-radius: var(--radius);
+    overflow: hidden;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    position: relative;
+  }
+  .embed-frame-wrapper iframe {
+    width: 100%;
+    height: 100%;
+    min-height: calc(100vh - 260px);
+    border: none;
+    display: block;
+  }
+
+  /* ── Loading State ── */
+  .loader-overlay {
+    position: absolute;
+    inset: 0;
+    background: var(--surface);
+    display: grid;
+    place-items: center;
+    z-index: 5;
+    transition: opacity 0.4s;
+  }
+  .loader-overlay.hidden { opacity: 0; pointer-events: none; }
+  .loader-spinner {
+    width: 28px; height: 28px;
+    border: 2px solid var(--border);
+    border-top-color: var(--text-secondary);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── Fullscreen mode ── */
+  .embed-container.fullscreen {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: var(--bg);
+    padding: 16px;
+    border-radius: 0;
+  }
+  .embed-container.fullscreen .embed-frame-wrapper {
+    border-radius: var(--radius-sm);
+  }
+  .embed-container.fullscreen .embed-frame-wrapper iframe {
+    min-height: calc(100vh - 120px);
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 768px) {
+    header { padding: 14px 18px; }
+    .tab-nav { padding: 12px 18px 0; overflow-x: auto; }
+    .tab-btn { padding: 10px 14px 14px; font-size: 13px; white-space: nowrap; }
+    .tab-label-en { display: none; }
+    .content { padding: 16px 18px 24px; }
+    .embed-title { font-size: 18px; }
+    .embed-header { flex-direction: column; align-items: flex-start; gap: 12px; }
+    .header-meta { display: none; }
+    .logo-text span { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="ambient"></div>
+
+<div class="app">
+
+  <!-- Header -->
+  <header>
+    <div class="logo">
+      <div class="logo-mark">L</div>
+      <div class="logo-text">
+        Leferi OS
+        <span>Design Review</span>
+      </div>
+    </div>
+    <div class="header-meta">
+      <span><span class="status-dot"></span>Live Preview</span>
+      <span id="current-date"></span>
+    </div>
+  </header>
+
+  <!-- Tab Navigation -->
+  <nav class="tab-nav">
+    <button class="tab-btn active" data-tab="ulta" onclick="switchTab('ulta')">
+      <span class="tab-dot"></span>
+      Ulta Beauty
+    </button>
+    <button class="tab-btn" data-tab="korea" onclick="switchTab('korea')">
+      <span class="tab-dot"></span>
+      Olive Young Korea
+    </button>
+    <button class="tab-btn" data-tab="global" onclick="switchTab('global')">
+      <span class="tab-dot"></span>
+      Olive Young Global
+    </button>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="content">
+
+    <!-- Ulta Beauty -->
+    <div class="embed-container active" id="panel-ulta">
+      <div class="embed-header">
+        <div>
+          <div class="embed-title">Ulta Beauty</div>
+          <div class="embed-subtitle">Leferi OS 3 Prototype</div>
+        </div>
+        <div class="embed-actions">
+          <button class="btn-action" onclick="toggleFullscreen('panel-ulta')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 00-2 2v3m18 0V5a2 2 0 00-2-2h-3m0 18h3a2 2 0 002-2v-3M3 16v3a2 2 0 002 2h3"/></svg>
+            풀스크린
+          </button>
+        </div>
+      </div>
+      <div class="embed-frame-wrapper">
+        <div class="loader-overlay" id="loader-ulta"><div class="loader-spinner"></div></div>
+        <iframe src="https://embed.figma.com/proto/c7sZUHfqgjOBDaHHwqG4IW/-Share--LeferiOS-3?page-id=0%3A1&node-id=2001-1300&viewport=-14229%2C14229%2C0.67&scaling=scale-down&content-scaling=fixed&starting-point-node-id=2001%3A1300&show-proto-sidebar=1&embed-host=share" allowfullscreen onload="hideLoader('loader-ulta')"></iframe>
+      </div>
+    </div>
+
+    <!-- 올리브영 코리아 -->
+    <div class="embed-container" id="panel-korea">
+      <div class="embed-header">
+        <div>
+          <div class="embed-title">Olive Young Korea</div>
+          <div class="embed-subtitle">Leferi OS Prototype</div>
+        </div>
+        <div class="embed-actions">
+          <button class="btn-action" onclick="toggleFullscreen('panel-korea')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 00-2 2v3m18 0V5a2 2 0 00-2-2h-3m0 18h3a2 2 0 002-2v-3M3 16v3a2 2 0 002 2h3"/></svg>
+            풀스크린
+          </button>
+        </div>
+      </div>
+      <div class="embed-frame-wrapper">
+        <div class="loader-overlay" id="loader-korea"><div class="loader-spinner"></div></div>
+        <iframe src="https://embed.figma.com/proto/zxMbBMvH0D8IkR0NlJSYcy/-Share--LeferiOS_%EC%98%AC%EB%A6%AC%EB%B8%8C%EC%98%81?page-id=1%3A116&node-id=1-11511&viewport=-692%2C1279%2C0.25&scaling=scale-down&content-scaling=fixed&starting-point-node-id=1%3A11511&show-proto-sidebar=1&embed-host=share" allowfullscreen onload="hideLoader('loader-korea')"></iframe>
+      </div>
+    </div>
+
+    <!-- 올리브영 글로벌 -->
+    <div class="embed-container" id="panel-global">
+      <div class="embed-header">
+        <div>
+          <div class="embed-title">Olive Young Global</div>
+          <div class="embed-subtitle">Leferi OS Prototype</div>
+        </div>
+        <div class="embed-actions">
+          <button class="btn-action" onclick="toggleFullscreen('panel-global')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 00-2 2v3m18 0V5a2 2 0 00-2-2h-3m0 18h3a2 2 0 002-2v-3M3 16v3a2 2 0 002 2h3"/></svg>
+            풀스크린
+          </button>
+        </div>
+      </div>
+      <div class="embed-frame-wrapper">
+        <div class="loader-overlay" id="loader-global"><div class="loader-spinner"></div></div>
+        <iframe src="https://embed.figma.com/proto/kA26hO0vBq3kT3ypIzm8jQ/-Share--LeferiOS_%EC%98%AC%EB%A6%AC%EB%B8%8C%EC%98%81-%EA%B8%80%EB%A1%9C%EB%B2%8C-2?page-id=1%3A116&node-id=4007-30250&viewport=-203%2C145%2C0.5&scaling=scale-down&content-scaling=fixed&starting-point-node-id=4007%3A30100&show-proto-sidebar=1&embed-host=share" allowfullscreen onload="hideLoader('loader-global')"></iframe>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+  // Date display
+  const d = new Date();
+  const opts = { year:'numeric', month:'long', day:'numeric' };
+  document.getElementById('current-date').textContent = d.toLocaleDateString('ko-KR', opts);
+
+  // Tab switching
+  function switchTab(tab) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelector(`.tab-btn[data-tab="${tab}"]`).classList.add('active');
+
+    document.querySelectorAll('.embed-container').forEach(p => p.classList.remove('active'));
+    document.getElementById(`panel-${tab}`).classList.add('active');
+  }
+
+  // Hide loader when iframe loads
+  function hideLoader(id) {
+    const el = document.getElementById(id);
+    if (el) el.classList.add('hidden');
+  }
+
+  // Fullscreen toggle
+  function toggleFullscreen(panelId) {
+    const panel = document.getElementById(panelId);
+    panel.classList.toggle('fullscreen');
+
+    const btn = panel.querySelector('.btn-action');
+    if (panel.classList.contains('fullscreen')) {
+      btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 14h6m0 0v6m0-6L3 21M20 10h-6m0 0V4m0 6l7-7"/></svg> 닫기`;
+    } else {
+      btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 00-2 2v3m18 0V5a2 2 0 00-2-2h-3m0 18h3a2 2 0 002-2v-3M3 16v3a2 2 0 002 2h3"/></svg> 풀스크린`;
+    }
+  }
+
+  // ESC to exit fullscreen
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      document.querySelectorAll('.embed-container.fullscreen').forEach(p => {
+        p.classList.remove('fullscreen');
+        const btn = p.querySelector('.btn-action');
+        btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 00-2 2v3m18 0V5a2 2 0 00-2-2h-3m0 18h3a2 2 0 002-2v-3M3 16v3a2 2 0 002 2h3"/></svg> 풀스크린`;
+      });
+    }
+  });
+</script>
+
+</body>
+</html>
